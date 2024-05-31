@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Management</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+
+<h1>User Management</h1>
+
+<h2>Register User</h2>
+<form id="registerForm">
+    <input type="text" id="user_id" name="user_id" disabled style="display: none;"><br><br>
+    <label for="firstName">First Name:</label>
+    <input type="text" id="firstName" name="firstName" required><br><br>
+    <label for="lastName">Last Name:</label>
+    <input type="text" id="lastName" name="lastName" required><br><br>
+    <label for="email">Email:</label>
+    <input type="email" id="email" name="email" required><br><br>
+    <label for="password">Password:</label>
+    <input type="password" id="password" name="password" required><br><br>
+    <button type="button" id="save-user" onclick="createUser()">Save User</button>
+    <button type="button" id="edit-user" style="display: none;" onclick="updateUser()">Edit User</button>
+</form>
+
+<h2>User List</h2>
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Email</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody id="userTable">
+        <!-- User rows will be populated here -->
+    </tbody>
+</table>
+
+<script>
+    document.addEventListener('DOMContentLoaded', fetchUsers);
+    function fetchUsers() {
+        fetch('http://127.0.0.1:5555/users')
+            .then(async response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const {data} = await response.json();
+                const userTable = document.getElementById('userTable');
+                userTable.innerHTML = ''; // Clear existing rows
+                  for (let index = 0; index < data.length; index++) {
+                    const user = data[index];
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${user.id}</td>
+                        <td>${user.firstName}</td>
+                        <td>${user.lastName}</td>
+                        <td>${user.email}</td>
+                        <td>
+                            <button onclick="deleteUser(${user.id})">Delete</button>
+                            <button onclick="showUpdateForm(${user.id}, '${user.firstName}', '${user.lastName}')">Update</button>
+                        </td>
+                    `;
+                    userTable.appendChild(row);
+                  }
+            })
+            .catch(error => {
+                console.error('Error fetching users:', error);
+            });
+    }
+
+    function createUser() {
+        const form = document.getElementById('registerForm');
+        const data = {
+            firstName: form.firstName.value,
+            lastName: form.lastName.value,
+            email: form.email.value,
+            password: form.password.value
+        };
+
+        fetch('http://127.0.0.1:5555/users', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(() => {
+            fetchUsers();
+            form.reset();
+        });
+    }
+
+    function deleteUser(id) {
+        fetch(`http://127.0.0.1:5555/users/${id}`, {
+            method: 'DELETE'
+        })
+        .then(() => fetchUsers());
+    }
+
+    function showUpdateForm(id, firstName, lastName) {
+        console.log(id, firstName, lastName, email);
+        const form = document.getElementById('registerForm');
+        const btnSave = document.getElementById('save-user');
+        btnSave.style.display = 'none';
+        const btnPass = document.getElementById('password');
+        btnPass.style.display = 'none';
+        const btnEmail = document.getElementById('email');
+        btnEmail.style.display = 'none';
+        const btnEdit = document.getElementById('edit-user');
+        btnEdit.style.display = 'block';
+        form.firstName.value = firstName;
+        form.lastName.value = lastName;
+        form.user_id.value = id;
+    }
+
+    function updateUser() {
+        const form = document.getElementById('registerForm');
+        const data = {
+            firstName: form.firstName.value,
+            lastName: form.lastName.value,
+        };
+
+        fetch(`http://127.0.0.1:5555/users/${form.user_id.value}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(() => {
+            fetchUsers();
+            form.reset();
+            form.onsubmit = createUser;
+        });
+    }
+</script>
+
+</body>
+</html>
