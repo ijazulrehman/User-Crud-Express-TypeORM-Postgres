@@ -17,25 +17,30 @@
 2. Copy the example environment file and update the necessary variables:
     ```bash
     cp .env.example .env
+    cp docker.env.example docker.env
     ```
 
 ### 1.2. Docker
-1. Run the Docker Compose command to start your Postgres server:
-    ```bash
-    docker compose up -d
-    ```
+1. Run the Docker Compose command to start your Postgres & PgAdmin
+
+```bash
+    $ docker compose up -d
+```
+  You can access the pgadmin at http://localhost:8080 with credentials mention in docker.env file.
 
 ### 1.3. Running
 1. Start the development server:
     ```bash
     npm run dev
     ```
+    This will run the project along side with migrations.
 
 ### 1.4. Seed
 1. Seed the database with initial data:
     ```bash
     npm run seed
     ```
+    This will insert the dummy users data in the database.
 
 ## Backend Development
 ### Task: Create a Simple REST API using Express.js
